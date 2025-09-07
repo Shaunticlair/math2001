@@ -12,6 +12,7 @@ def pascal : ℕ → ℕ → ℕ
   | a, 0 => 1
   | 0, b + 1 => 1
   | a + 1, b + 1 => pascal (a + 1) b + pascal a (b + 1)
+
 termination_by _ a b => a + b
 
 
@@ -81,12 +82,23 @@ example (a b : ℕ) : (pascal a b : ℚ) = (a + b)! / (a ! * b !) := by
 
 theorem pascal_symm (m n : ℕ) : pascal m n = pascal n m := by
   match m, n with
-  | 0, 0 => sorry
-  | a + 1, 0 => sorry
-  | 0, b + 1 => sorry
-  | a + 1, b + 1 => sorry
+  | 0, 0 => rfl
+
+  | a + 1, 0 => rw [pascal, pascal]
+
+  | 0, b + 1 => rw [pascal, pascal]
+  | a + 1, b + 1 =>
+    rw [pascal, pascal];
+    rw [pascal_symm (a+1) b, pascal_symm a (b+1)]
+    ring
+
 termination_by _ a b => a + b
 
 
 example (a : ℕ) : pascal a 1 = a + 1 := by
-  sorry
+  simple_induction a with k IH
+  · rw [pascal]
+  · rw [pascal, pascal]
+    norm_num
+    rw [IH]
+    ring

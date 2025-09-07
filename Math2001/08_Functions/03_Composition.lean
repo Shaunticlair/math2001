@@ -9,6 +9,7 @@ set_option pp.funBinderTypes true
 open Function
 
 
+
 def f (a : ℝ) : ℝ := a + 3
 def g (b : ℝ) : ℝ := 2 * b
 def h (c : ℝ) : ℝ := 2 * c + 6
@@ -131,10 +132,10 @@ def b : Humour → Humour
   | sanguine => sanguine
 
 def c : Humour → Humour
-  | melancholic => sorry
-  | choleric => sorry
-  | phlegmatic => sorry
-  | sanguine => sorry
+  | melancholic => sanguine
+  | choleric => phlegmatic
+  | phlegmatic => melancholic
+  | sanguine => phlegmatic
 
 example : b ∘ a = c := by
   ext x
@@ -143,25 +144,57 @@ example : b ∘ a = c := by
 
 def u (x : ℝ) : ℝ := 5 * x + 1
 
-noncomputable def v (x : ℝ) : ℝ := sorry
+noncomputable def v (x : ℝ) : ℝ := (x-1) / 5
 
 example : Inverse u v := by
-  sorry
+  constructor
+  · ext x
+    dsimp [u, v]
+    ring
+  · ext x
+    dsimp [u, v]
+    ring
 
 example {f : X → Y} (hf : Injective f) {g : Y → Z} (hg : Injective g) :
     Injective (g ∘ f) := by
-  sorry
+  intro x1 x2 h
+  apply hg at h
+  apply hf at h
+  exact h
+
 
 example {f : X → Y} (hf : Surjective f) {g : Y → Z} (hg : Surjective g) :
     Surjective (g ∘ f) := by
-  sorry
+  intro z
+  obtain ⟨y, hy⟩:= hg z
+  obtain ⟨x, hx⟩ := hf y
+  use x
+  rw [← hy, ← hx]
+  rfl
 
 example {f : X → Y} (hf : Surjective f) : ∃ g : Y → X, f ∘ g = id := by
-  sorry
+  dsimp [Surjective] at hf
+  choose g hg using hf
+  use g
+
+  ext y
+  apply hg y
+
 
 example {f : X → Y} {g : Y → X} (h : Inverse f g) : Inverse g f := by
-  sorry
+  dsimp [Inverse] at h
+  exact ⟨ h.2, h.1 ⟩
+
 
 example {f : X → Y} {g1 g2 : Y → X} (h1 : Inverse f g1) (h2 : Inverse f g2) :
     g1 = g2 := by
-  sorry
+  dsimp [Inverse] at h1 h2
+  ext y
+
+  obtain ⟨h1f, hf1⟩ := h1
+  obtain ⟨h2f, hf2⟩ := h2
+  calc
+    g1 y = (g2 ∘ f) ( g1 y) := by rw [h2f, id]
+    _ = g2 (f (g1 y)) := by rfl
+    _ = g2 ((f ∘ g1) y) := by rfl
+    _ = g2 (y) := by rw [hf1, id]

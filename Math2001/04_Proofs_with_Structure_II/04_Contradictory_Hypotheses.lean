@@ -55,8 +55,11 @@ example (n : ℤ) (hn : n ^ 2 + n + 1 ≡ 1 [ZMOD 3]) :
 
 
 example {p : ℕ} (hp : 2 ≤ p) (H : ∀ m : ℕ, 1 < m → m < p → ¬m ∣ p) : Prime p := by
+  unfold Prime at *
+
   constructor
   · apply hp -- show that `2 ≤ p`
+
   intro m hmp
   have hp' : 0 < p := by extra
   have h1m : 1 ≤ m := Nat.pos_of_dvd_of_pos hmp hp'
@@ -65,7 +68,14 @@ example {p : ℕ} (hp : 2 ≤ p) (H : ∀ m : ℕ, 1 < m → m < p → ¬m ∣ p
     left
     addarith [hm]
   -- the case `1 < m`
-  sorry
+  · have hmm:= Nat.le_of_dvd hp' hmp
+
+    obtain heq | hlt := eq_or_lt_of_le hmm
+    · right
+      exact heq
+    · have := (H m hm_left hlt)
+      contradiction
+
 
 example : Prime 5 := by
   apply prime_test
@@ -83,20 +93,111 @@ example : Prime 5 := by
 
 example {a b c : ℕ} (ha : 0 < a) (hb : 0 < b) (hc : 0 < c)
     (h_pyth : a ^ 2 + b ^ 2 = c ^ 2) : 3 ≤ a := by
-  sorry
+  have: a ≤ 2 ∨ 3 ≤ a := le_or_lt a 2
+  obtain ha' | ha' := this
+  · obtain hb' | hb' := le_or_lt b 1
+    have hc := by
+      calc
+        c^2 = a ^ 2 + b ^ 2 := by rel [h_pyth]
+        _ ≤ 2 ^ 2 + 1 ^ 2 := by rel [ha', hb']
+        _ < 3 ^ 2 := by numbers
+    cancel 2 at hc
+    interval_cases a
+    · interval_cases b
+      · interval_cases c <;> numbers at h_pyth
+    · interval_cases b
+      · interval_cases c <;> numbers at h_pyth
+    · have hb': 2 ≤ b := by addarith [hb']
+      have := by
+        calc
+          b^2 < a^2 + b^2 := by extra
+          _ = c^2 := by rel [h_pyth]
+      cancel 2 at this
+      have contra1: b + 1 ≤ c := by addarith [this]
+      have: c^2 < (b+1)^2:= by
+        calc
+          c^2 = a ^ 2 + b ^ 2 := by rel [h_pyth]
+          _ ≤ 2 ^ 2 + b^2 := by rel [ha']
+          _ = b^2 + 2*2 := by ring
+          _ ≤ b^2 + 2*b := by rel [hb']
+          _ < b^2 + 2*b + 1 := by extra
+          _ = (b + 1)^2 := by ring
+      cancel 2 at this
+      apply not_lt_of_ge at contra1
+      contradiction
+  · exact ha'
+
+
+
+
 
 /-! # Exercises -/
 
 
 example {x y : ℝ} (n : ℕ) (hx : 0 ≤ x) (hn : 0 < n) (h : y ^ n ≤ x ^ n) :
     y ≤ x := by
-  sorry
+  have := le_or_gt y 0
+  obtain hyneg | hypos := this
+  · calc
+      y ≤ 0 := by rel [hyneg]
+      _ ≤ x := by rel [hx]
+  · have := le_or_gt y x
+    obtain hyeq | hygt := this
+    · exact hyeq
+    · have : y^n > x^n := by rel [hygt]
+      have : ¬ y^n ≤ x^n := by
+        apply not_le_of_gt
+        exact this
+      contradiction
+
 
 example (n : ℤ) (hn : n ^ 2 ≡ 4 [ZMOD 5]) : n ≡ 2 [ZMOD 5] ∨ n ≡ 3 [ZMOD 5] := by
-  sorry
+  mod_cases h: n % 5
+  · have:= by
+      calc
+        0 = 0 ^2:= by ring
+        _ ≡ n^2 [ZMOD 5] := by rel [h]
+        _ ≡ 4 [ZMOD 5] := hn
+    numbers at this -- contradiction!
+  · have := by
+      calc
+        1 = 1^2 := by ring
+        _ ≡ n^2 [ZMOD 5] := by rel [h]
+        _ ≡ 4 [ZMOD 5] := by rel [hn]
+    numbers at this -- contradiction!
+  · left
+    apply h
+  · right
+    apply h
+  · have := by
+      calc
+        4 ≡ n^2 [ZMOD 5] := by rel [hn]
+        _ ≡ 4^2 [ZMOD 5] := by rel [h]
+        _ ≡ 16 [ZMOD 5] := by numbers
+        _ ≡ 5*3+1 [ZMOD 5] := by numbers
+        _ ≡ 1 [ZMOD 5] := by extra
+    numbers at this -- contradiction!
+
+
+
 
 example : Prime 7 := by
-  sorry
+  apply prime_test
+  · numbers
+  intro m hm1 hm7
+  apply Nat.not_dvd_of_exists_lt_and_lt
+  interval_cases m
+  · use 3
+    constructor <;> numbers
+  · use 2
+    constructor <;> numbers
+  · use 1
+    constructor <;> numbers
+  · use 1
+    constructor <;> numbers
+  · use 1
+    constructor <;> numbers
+
 
 example {x : ℚ} (h1 : x ^ 2 = 4) (h2 : 1 < x) : x = 2 := by
   have h3 :=
@@ -104,9 +205,33 @@ example {x : ℚ} (h1 : x ^ 2 = 4) (h2 : 1 < x) : x = 2 := by
       (x + 2) * (x - 2) = x ^ 2 + 2 * x - 2 * x - 4 := by ring
       _ = 0 := by addarith [h1]
   rw [mul_eq_zero] at h3
-  sorry
+  obtain h3 | h3 := h3
+  · have: x = -2 := by addarith [h3]
+    rw [this] at h2
+    numbers at h2
+  · have: x = 2 := by addarith [h3]
+    exact this
+
 
 namespace Nat
 
+
 example (p : ℕ) (h : Prime p) : p = 2 ∨ Odd p := by
-  sorry
+  unfold Prime at h
+  obtain ⟨ h1, h2⟩  := h
+  obtain h2 | h3 := le_or_lt p 2
+  · left
+    exact le_antisymm h2 h1
+  · right
+    have:= Nat.even_or_odd p
+    obtain heven | hodd := this
+    · obtain ⟨k,hk⟩ := heven
+      have h2k:= h2 2
+      have hdivp : (2 ∣ p) := by
+        use k; exact hk
+      apply h2k at hdivp
+      obtain hdivp | hdivp := hdivp
+      · numbers at hdivp
+      · rw [← hdivp] at h3
+        numbers at h3
+    · exact hodd

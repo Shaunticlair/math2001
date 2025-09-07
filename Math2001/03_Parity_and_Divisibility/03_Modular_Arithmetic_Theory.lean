@@ -10,7 +10,8 @@ example : 11 ≡ 3 [ZMOD 4] := by
   numbers
 
 example : -5 ≡ 1 [ZMOD 3] := by
-  sorry
+  use -2
+  numbers
 
 theorem Int.ModEq.add {n a b c d : ℤ} (h1 : a ≡ b [ZMOD n]) (h2 : c ≡ d [ZMOD n]) :
     a + c ≡ b + d [ZMOD n] := by
@@ -26,7 +27,16 @@ theorem Int.ModEq.add {n a b c d : ℤ} (h1 : a ≡ b [ZMOD n]) (h2 : c ≡ d [Z
 
 theorem Int.ModEq.sub {n a b c d : ℤ} (h1 : a ≡ b [ZMOD n]) (h2 : c ≡ d [ZMOD n]) :
     a - c ≡ b - d [ZMOD n] := by
-  sorry
+  unfold Int.ModEq at *
+  obtain ⟨x,hx⟩ := h1
+  obtain ⟨y,hy⟩ := h2
+  use x-y
+
+  calc
+    a-c-(b-d) = a-b-(c-d) := by ring
+    _ = n*x - n*y := by rw [hx,hy]
+    _ = n* (x-y) := by ring
+
 
 theorem Int.ModEq.neg {n a b : ℤ} (h1 : a ≡ b [ZMOD n]) : -a ≡ -b [ZMOD n] := by
   sorry
@@ -94,24 +104,49 @@ example {a b : ℤ} (ha : a ≡ 2 [ZMOD 4]) :
 
 
 example : 34 ≡ 104 [ZMOD 5] := by
-  sorry
+  use -14
+  numbers
+
 
 theorem Int.ModEq.symm (h : a ≡ b [ZMOD n]) : b ≡ a [ZMOD n] := by
-  sorry
+  obtain ⟨k,hk⟩:=h
+  use -k
+  calc
+    b - a = -(a - b) := by ring
+    _ = -(n * k) := by rw [hk]
+    _ = n * (-k) := by ring
 
 theorem Int.ModEq.trans (h1 : a ≡ b [ZMOD n]) (h2 : b ≡ c [ZMOD n]) :
     a ≡ c [ZMOD n] := by
-  sorry
+  obtain ⟨k1, hk1⟩ := h1
+  obtain ⟨k2, hk2⟩ := h2
+  use k1 + k2
+  calc
+    a-c = (a - b) + (b - c) := by ring
+    _ = n * k1 + n * k2 := by rw [hk1, hk2]
+    _ = n * (k1 + k2) := by ring
 
 example : a + n * c ≡ a [ZMOD n] := by
-  sorry
+  unfold Int.ModEq
+  use c
+  ring
 
 
-example {a b : ℤ} (h : a ≡ b [ZMOD 5]) : 2 * a + 3 ≡ 2 * b + 3 [ZMOD 5] := by
-  sorry
+-- Strengthened to include c,d,e
+lemma useful {a b c d e: ℤ} (h : a ≡ b [ZMOD d]) : e * a + c ≡ e * b + c [ZMOD d] := by
+  obtain ⟨k,hk⟩ := h
+  unfold Int.ModEq
+  use e*k
+  calc
+     e * a + c - (e * b + c) = e*(a-b) := by ring
+     _ = e*(d*k) := by rw [hk]
+     _ = d*(e*k) := by ring
+
+
+
 
 example {m n : ℤ} (h : m ≡ n [ZMOD 4]) : 3 * m - 1 ≡ 3 * n - 1 [ZMOD 4] := by
-  sorry
+  apply useful h
 
 example {k : ℤ} (hb : k ≡ 3 [ZMOD 5]) :
     4 * k + k ^ 3 + 3 ≡ 4 * 3 + 3 ^ 3 + 3 [ZMOD 5] := by

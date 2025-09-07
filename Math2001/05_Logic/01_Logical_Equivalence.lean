@@ -19,6 +19,8 @@ example (P Q : Prop) : P → (P ∨ ¬ Q) := by
 
 #truth_table ¬(P ∧ ¬ Q)
 
+#truth_table P ↔ (¬ P ∨ Q)
+
 
 example (P : Prop) : (P ∨ P) ↔ P := by
   constructor
@@ -31,6 +33,7 @@ example (P : Prop) : (P ∨ P) ↔ P := by
     apply h
 
 
+-- Distribution
 example (P Q R : Prop) : (P ∧ (Q ∨ R)) ↔ ((P ∧ Q) ∨ (P ∧ R)) := by
   constructor
   · intro h
@@ -43,7 +46,15 @@ example (P Q R : Prop) : (P ∧ (Q ∨ R)) ↔ ((P ∧ Q) ∨ (P ∧ R)) := by
       constructor
       · apply h1
       · apply h2
-  · sorry
+  · intro h
+    obtain ⟨ h1,h2⟩  | ⟨ h3,h4⟩  := h
+    · constructor -- h1,h2
+      · exact h1
+      · left; exact h2
+    · constructor -- h3, h4
+      · exact h3
+      · right; exact h4
+
 
 #truth_table P ∧ (Q ∨ R)
 #truth_table (P ∧ Q) ∨ (P ∧ R)
@@ -81,43 +92,134 @@ example (P : α → Prop) : ¬ (∃ x, P x) ↔ ∀ x, ¬ P x := by
 
 
 example {P Q : Prop} (h : P ∧ Q) : P ∨ Q := by
-  sorry
+  obtain ⟨hP, hQ⟩ := h
+  left; exact hP
+
 
 example {P Q R : Prop} (h1 : P → Q) (h2 : P → R) (h3 : P) : Q ∧ R := by
-  sorry
+  have hQ := h1 h3
+  have hR := h2 h3
+  exact ⟨hQ, hR⟩
 
 example (P : Prop) : ¬(P ∧ ¬ P) := by
-  sorry
+  intro h
+  obtain ⟨hP, hNP⟩ := h
+  contradiction
 
 example {P Q : Prop} (h1 : P ↔ ¬ Q) (h2 : Q) : ¬ P := by
-  sorry
+  intro hP
+  have:= h1.1 hP
+  contradiction
 
 example {P Q : Prop} (h1 : P ∨ Q) (h2 : Q → P) : P := by
-  sorry
+  obtain hP | hQ := h1
+  · exact hP
+  · exact h2 hQ
+
 
 example {P Q R : Prop} (h : P ↔ Q) : (P ∧ R) ↔ (Q ∧ R) := by
-  sorry
+  constructor
+  · intro hPR
+    obtain ⟨hP, hR⟩ := hPR
+    have hQ:= h.1 hP
+    exact And.intro hQ hR
+  · intro hQR
+    obtain ⟨hQ,hR⟩:= hQR
+    have hP:= h.2 hQ
+    exact And.intro hP hR
+
 
 example (P : Prop) : (P ∧ P) ↔ P := by
-  sorry
+  constructor
+  · intro h
+    exact h.left
+  · intro h
+    exact And.intro h h
+
 
 example (P Q : Prop) : (P ∨ Q) ↔ (Q ∨ P) := by
-  sorry
+  constructor
+  · intro h
+    obtain h | h := h
+    · right; exact h
+    · left; exact h
+  · intro h
+    obtain h | h := h
+    · right; exact h
+    · left; exact h
+
+
 
 example (P Q : Prop) : ¬(P ∨ Q) ↔ (¬P ∧ ¬Q) := by
-  sorry
+  constructor
+  · intro h
+    constructor
+    · intro hP
+      have h: P ∨ Q:= by left; exact hP
+      contradiction
+    · intro hQ
+      have h: P ∨ Q:= by right; exact hQ
+      contradiction
+  · intro h
+    obtain ⟨hnp, hnq⟩:= h
+    intro hpq
+    obtain hp | hq := hpq
+    contradiction; contradiction
 
 example {P Q : α → Prop} (h1 : ∀ x, P x → Q x) (h2 : ∀ x, P x) : ∀ x, Q x := by
-  sorry
+  intro x
+  have h1x:= h1 x
+  have h2x:= h2 x
+  exact h1x h2x
+
 
 example {P Q : α → Prop} (h : ∀ x, P x ↔ Q x) : (∃ x, P x) ↔ (∃ x, Q x) := by
-  sorry
+  constructor
+  · intro h2
+    obtain ⟨x, hp⟩:= h2
+    use x
+
+    have hx:= h x
+    exact hx.1 hp
+
+  · intro h2
+    obtain ⟨x,hq⟩ := h2
+    use x
+
+    have hx:= h x
+    exact hx.2 hq
+
 
 example (P : α → β → Prop) : (∃ x y, P x y) ↔ ∃ y x, P x y := by
-  sorry
+  constructor
+  · intro h
+    obtain ⟨x,y,hxy⟩ := h
+    use y, x
+    exact hxy
+  · intro h
+    obtain ⟨y,x,hyx⟩:= h
+    use x,y
+    exact hyx
+
 
 example (P : α → β → Prop) : (∀ x y, P x y) ↔ ∀ y x, P x y := by
-  sorry
+  constructor
+  · intro h
+    intro y x
+    exact h x y
+  · intro h
+    intro x y
+    exact h y x
 
 example (P : α → Prop) (Q : Prop) : ((∃ x, P x) ∧ Q) ↔ ∃ x, (P x ∧ Q) := by
-  sorry
+  constructor
+  · intro h
+    obtain ⟨h,hQ⟩:= h
+    obtain ⟨x,hP⟩:= h
+    use x
+    exact And.intro hP hQ
+  · intro h
+    obtain ⟨x, hP, hQ⟩ := h
+    apply And.intro _ hQ
+    use x
+    exact hP

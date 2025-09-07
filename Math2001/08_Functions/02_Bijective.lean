@@ -73,7 +73,7 @@ example : ¬ Bijective f := by
   cases x <;> exhaust
 
 
-example {f : X → Y} : Bijective f ↔ ∀ y, ∃! x, f x = y := by
+lemma useful {f : X → Y} : Bijective f ↔ ∀ y, ∃! x, f x = y := by
   constructor
   · -- if `f` is bijective then `∀ y, ∃! x, f x = y`
     intro h y
@@ -120,6 +120,7 @@ example : ∀ f : Celestial → Celestial, Injective f → Bijective f := by
     · apply hf
       rw [h_sun, h_moon]
     contradiction
+
   | sun, moon =>
     intro y
     cases y
@@ -127,8 +128,20 @@ example : ∀ f : Celestial → Celestial, Injective f → Bijective f := by
       apply h_sun
     · use moon
       apply h_moon
-  | moon, sun => sorry
-  | moon, moon => sorry
+
+  | moon, sun =>
+    intro y
+    cases y
+    · use moon
+      exact h_moon
+    · use sun
+      exact h_sun
+
+  | moon, moon =>
+    have : moon = sun
+    · apply hf
+      rw [h_sun, h_moon]
+    contradiction
 
 
 example : ¬ ∀ f : ℕ → ℕ, Injective f → Bijective f := by
@@ -137,6 +150,7 @@ example : ¬ ∀ f : ℕ → ℕ, Injective f → Bijective f := by
   constructor
   · -- the function is injective
     intro n1 n2 hn
+    dsimp at hn
     addarith [hn]
   · -- the function is not bijective
     dsimp [Bijective]
@@ -154,9 +168,19 @@ example : ¬ ∀ f : ℕ → ℕ, Injective f → Bijective f := by
 
 
 example : Bijective (fun (x : ℝ) ↦ 4 - 3 * x) := by
-  sorry
+  constructor
+  · intro x1 x2 hx
+    dsimp at hx
+    have: -3 *x1 = -3 * x2 := by addarith [hx]
+    cancel -3 at this
+  · intro y
+    use (4 - y) / 3
+    dsimp
+    ring
+
 
 example : ¬ Bijective (fun (x : ℝ) ↦ 4 - 3 * x) := by
+  -- False
   sorry
 
 
@@ -164,7 +188,15 @@ example : Bijective (fun (x : ℝ) ↦ x ^ 2 + 2 * x) := by
   sorry
 
 example : ¬ Bijective (fun (x : ℝ) ↦ x ^ 2 + 2 * x) := by
-  sorry
+  dsimp [Bijective]
+  push_neg
+  left
+  dsimp [Injective]
+  push_neg
+  use 0, -2
+  constructor
+  · numbers
+  · numbers
 
 inductive Element
   | fire

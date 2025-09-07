@@ -14,11 +14,16 @@ for clearer statements and any special instructions. -/
 
 @[autograded 5]
 theorem problem1 {p q : ℤ} (h1 : p + 4 * q = 1) (h2 : q - 1 = 2) : p = -11 := by
-  sorry
+  have h2' : q = 3 := by addarith [h2]
+  rw [h2'] at h1
+  addarith [h1]
 
 @[autograded 5]
 theorem problem2 {a b : ℝ} (h1 : a + 2 * b = 4) (h2 : a - b = 1) : a = 2 := by
+  have h2' : b = a -1 := by addarith [h2]
+  rw [h2'] at h1
   sorry
+
 
 @[autograded 5]
 theorem problem3 {x : ℤ} (hx : x ≥ 9) : x ^ 3 - 8 * x ^ 2 + 2 * x ≥ 3 := by

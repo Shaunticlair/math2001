@@ -13,4 +13,10 @@ for clearer statements and any special instructions. -/
 
 @[autograded 5]
 theorem problem1 {n : ℤ} (hn : n ≥ 5) : n ^ 2 > 2 * n + 11 :=
-  sorry
+  calc
+    n^2 = n * n := by ring
+    _ ≥ 5 * n := by rel [hn]
+    _ = 2 * n + 3 * n := by ring
+    _ ≥  2 * n + 3 * 5 := by rel [hn]
+    _ = 2 * n + 11 + 4 := by ring
+    _ > 2 * n + 11 := by extra

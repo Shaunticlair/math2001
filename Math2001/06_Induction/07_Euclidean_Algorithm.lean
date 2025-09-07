@@ -67,31 +67,66 @@ theorem gcd_dvd (a b : ℤ) : gcd a b ∣ b ∧ gcd a b ∣ a := by
   · -- case `0 < b`
     have IH : _ ∧ _ := gcd_dvd b (fmod a b) -- inductive hypothesis
     obtain ⟨IH_right, IH_left⟩ := IH
+
+
+    --obtain ⟨l, hl⟩ := IH_left
+
     constructor
     · -- prove that `gcd a b ∣ b`
-      sorry
+      exact IH_left
     · -- prove that `gcd a b ∣ a`
-      sorry
+
+      set g := gcd b (fmod a b)
+
+      obtain ⟨k, hk⟩ := IH_right
+      obtain ⟨l, hl⟩ := IH_left
+      have H:= fmod_add_fdiv a b
+      set d := fdiv a b
+      rw [hk, hl] at H
+      use k + l * d
+      rw [← H]
+      ring
+
   · -- case `b < 0`
+
     have IH : _ ∧ _ := gcd_dvd b (fmod a (-b)) -- inductive hypothesis
     obtain ⟨IH_right, IH_left⟩ := IH
+    set g := gcd b (fmod a (-b))
     constructor
     · -- prove that `gcd a b ∣ b`
-      sorry
+      exact IH_left
     · -- prove that `gcd a b ∣ a`
-      sorry
+      obtain ⟨k, hk⟩ := IH_right
+      obtain ⟨l, hl⟩ := IH_left
+      have H:= fmod_add_fdiv a (-b)
+      set d := fdiv a (-b)
+      rw [hk, hl] at H
+      use k - l*d
+      rw [← H]
+      ring
+
   · -- case `b = 0`, `0 ≤ a`
     constructor
     · -- prove that `gcd a b ∣ b`
-      sorry
+      use 0
+      have hb : b = 0 := le_antisymm h1 h2
+      rw [hb]
+      ring
     · -- prove that `gcd a b ∣ a`
-      sorry
+      use 1
+      ring
+
   · -- case `b = 0`, `a < 0`
     constructor
     · -- prove that `gcd a b ∣ b`
-      sorry
+      have hb : b = 0 := le_antisymm h1 h2
+      use 0
+      rw [hb]
+      ring
+
     · -- prove that `gcd a b ∣ a`
-      sorry
+      use -1
+      ring
 termination_by gcd_dvd a b => b
 
 
@@ -221,4 +256,11 @@ theorem bezout (a b : ℤ) : ∃ x y : ℤ, x * a + y * b = gcd a b := by
 
 
 theorem gcd_maximal {d a b : ℤ} (ha : d ∣ a) (hb : d ∣ b) : d ∣ gcd a b := by
-  sorry
+  obtain ⟨k, hk⟩ := ha
+  obtain ⟨l, hl⟩ := hb
+  have H := bezout a b
+  obtain ⟨x,y,h⟩:= H
+  use x * k + y * l
+  rw [←  h]
+  rw [hk,hl]
+  ring

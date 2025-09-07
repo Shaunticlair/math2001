@@ -22,7 +22,11 @@ example {n : ℕ} : n ^ 2 ≠ 2 := by
   calc
     n ^ 2 ≤ 1 ^ 2 := by rel [hn]
     _ < 2 := by numbers
-  sorry
+  apply ne_of_gt
+  calc
+    2 < 2 ^ 2 := by numbers
+    _ ≤ n ^ 2 := by rel [hn]
+
 
 example {x : ℝ} (hx : 2 * x + 1 = 5) : x = 1 ∨ x = 2 := by
   right
@@ -38,7 +42,13 @@ example {x : ℝ} (hx : x ^ 2 - 3 * x + 2 = 0) : x = 1 ∨ x = 2 := by
     (x - 1) * (x - 2) = x ^ 2 - 3 * x + 2 := by ring
     _ = 0 := by rw [hx]
   have h2 := eq_zero_or_eq_zero_of_mul_eq_zero h1
-  sorry
+
+  obtain x1 | x2 := h2
+  left
+  addarith [x1]
+  right
+  addarith [x2]
+
 
 example {n : ℤ} : n ^ 2 ≠ 2 := by
   have hn0 := le_or_succ_le n 0
@@ -72,7 +82,15 @@ example {n : ℤ} : n ^ 2 ≠ 2 := by
 
 
 example {x : ℚ} (h : x = 4 ∨ x = -4) : x ^ 2 + 1 = 17 := by
-  sorry
+  obtain hx | hx := h
+  · calc
+    x ^ 2 + 1 = 4 ^ 2 + 1 := by rw [hx]
+    _ = 16 + 1 := by numbers
+    _ = 17 := by numbers
+  · calc
+    x ^ 2 + 1 = (-4) ^ 2 + 1 := by rw [hx]
+    _ = 16 + 1 := by numbers
+    _ = 17 := by numbers
 
 example {x : ℝ} (h : x = 1 ∨ x = 2) : x ^ 2 - 3 * x + 2 = 0 := by
   sorry
@@ -93,7 +111,17 @@ example {x y : ℝ} (h : y = 2 * x + 1) : x < y / 2 ∨ x > y / 2 := by
   sorry
 
 example {x : ℝ} (hx : x ^ 2 + 2 * x - 3 = 0) : x = -3 ∨ x = 1 := by
-  sorry
+  have h1 :=
+    calc
+    (x + 3) * (x - 1) = x ^ 2 + 2 * x - 3 := by ring
+    _ = 0 := by rw [hx]
+  have h2 := eq_zero_or_eq_zero_of_mul_eq_zero h1
+  obtain hx1 | hx2 := h2
+  · left
+    addarith [hx1]
+  · right
+    addarith [hx2]
+
 
 example {a b : ℝ} (hab : a ^ 2 + 2 * b ^ 2 = 3 * a * b) : a = b ∨ a = 2 * b := by
   sorry
@@ -102,7 +130,16 @@ example {t : ℝ} (ht : t ^ 3 = t ^ 2) : t = 1 ∨ t = 0 := by
   sorry
 
 example {n : ℕ} : n ^ 2 ≠ 7 := by
-  sorry
+  have hn := le_or_succ_le n 2
+  obtain hn | hn := hn
+  · apply ne_of_lt
+    calc
+      n^2 ≤ 2^2 := by rel [hn]
+      _ < 7 := by numbers
+  · apply ne_of_gt
+    calc
+      n^2 ≥ 3^2 := by rel [hn]
+      _ > 7 := by numbers
 
 example {x : ℤ} : 2 * x ≠ 3 := by
   sorry

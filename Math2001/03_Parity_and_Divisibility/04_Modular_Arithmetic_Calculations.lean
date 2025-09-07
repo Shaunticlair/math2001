@@ -26,7 +26,7 @@ example : ∃ a : ℤ, 6 * a ≡ 4 [ZMOD 11] := by
     _ ≡ 4 [ZMOD 11] := by extra
 
 
-example {x : ℤ} : x ^ 3 ≡ x [ZMOD 3] := by
+lemma trio {x : ℤ} : x ^ 3 ≡ x [ZMOD 3] := by
   mod_cases hx : x % 3
   calc
     x ^ 3 ≡ 0 ^ 3 [ZMOD 3] := by rel [hx]
@@ -42,15 +42,26 @@ example {x : ℤ} : x ^ 3 ≡ x [ZMOD 3] := by
     _ ≡ 2 [ZMOD 3] := by extra
     _ ≡ x [ZMOD 3] := by rel [hx]
 
-/-! # Exercises -/
 
 
 example {n : ℤ} (hn : n ≡ 1 [ZMOD 3]) : n ^ 3 + 7 * n ≡ 2 [ZMOD 3] :=
-  sorry
+  have h8 : 8 ≡ 2 [ZMOD 3] := by
+    calc
+      8 = 2 + 2 * 3 := by numbers
+      _ ≡ 2 [ZMOD 3] := by extra
+  calc
+    n ^ 3 + 7 * n ≡ 1 ^ 3 + 7 * 1 [ZMOD 3] := by rel [hn]
+    _ = 8 := by numbers
+    _ ≡ 2 [ZMOD 3] := by apply h8
 
 example {a : ℤ} (ha : a ≡ 3 [ZMOD 4]) :
     a ^ 3 + 4 * a ^ 2 + 2 ≡ 1 [ZMOD 4] :=
-  sorry
+  calc
+    a ^ 3 + 4 * a ^ 2 + 2 ≡ 3 ^ 3 + 4 * 3 ^ 2 + 2 [ZMOD 4] := by rel [ha]
+    _ = 27 + 36 + 2 := by numbers
+    _ = 65 := by numbers
+    _ ≡ 1 + 16 * 4 [ZMOD 4] := by numbers
+    _ ≡ 1 [ZMOD 4] := by extra
 
 example (a b : ℤ) : (a + b) ^ 3 ≡ a ^ 3 + b ^ 3 [ZMOD 3] :=
   sorry

@@ -47,6 +47,7 @@ example : ¬ Injective p := by
     exhaust
 
 
+
 def q (s : Set ℤ) : Set ℤ := {n : ℤ | n + 1 ∈ s}
 
 example : Injective q := by
@@ -79,7 +80,20 @@ example : ¬ ∃ f : X → Set X, Surjective f := by
 def r (s : Set ℕ) : Set ℕ := s ∪ {3}
 
 example : ¬ Injective r := by
-  sorry
+  dsimp [Injective, r]
+  push_neg
+  use {3}, ∅
+  constructor
+  · ext x
+    dsimp
+    exhaust
+  · ext
+    push_neg
+    use 3
+    left
+    dsimp
+    exhaust
+
 
 namespace Int
 
@@ -90,8 +104,24 @@ def U : ℕ → Set ℤ
 example (n : ℕ) : U n = {x : ℤ | (2:ℤ) ^ n ∣ x} := by
   simple_induction n with k hk
   · rw [U]
-    sorry
+    ext x; dsimp
+    conv => ring
+    suffices 1 ∣  x by exhaust
+    use x; ring
   · rw [U]
     ext x
+    rw [hk]
     dsimp
-    sorry
+    constructor
+    · intro h
+      obtain ⟨y, h1,h2⟩:=h
+      obtain ⟨z,hz⟩:= h1
+      use z
+      rw [h2,hz]
+      ring
+    · intro h
+      obtain ⟨z,hz⟩:= h
+      use 2^k * z
+      constructor
+      · use z; rfl
+      · rw [hz]; ring

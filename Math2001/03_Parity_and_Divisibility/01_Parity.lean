@@ -13,7 +13,9 @@ example : Odd (7 : ℤ) := by
 
 
 example : Odd (-3 : ℤ) := by
-  sorry
+  unfold Odd
+  use -2
+  numbers
 
 example {n : ℤ} (hn : Odd n) : Odd (3 * n + 2) := by
   dsimp [Odd] at *

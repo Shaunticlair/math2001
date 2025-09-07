@@ -17,6 +17,9 @@ def a : ℕ → ℤ
 #eval a 5 -- infoview displays `31`
 
 
+-- Cases can be separated: n,n+1 used to derive n+2
+
+-- Two-step induction is a weaker form of strong induction
 example (n : ℕ) : a n = 2 ^ n + (-1) ^ n := by
   two_step_induction n with k IH1 IH2
   . calc a 0 = 2 := by rw [a]
@@ -29,6 +32,11 @@ example (n : ℕ) : a n = 2 ^ n + (-1) ^ n := by
     _ = (2 ^ (k + 1) + (-1) ^ (k + 1)) + 2 * (2 ^ k + (-1) ^ k) := by rw [IH1, IH2]
     _ = (2 : ℤ) ^ (k + 2) + (-1) ^ (k + 2) := by ring
 
+
+-- Cases are not separate!
+-- Notably, this means (n,n+1) are used to prove (n+1,n+2)
+-- There's an overlap!
+-- But the n+1 in the hypothesis/conclusion is not the same n+1
 
 example {m : ℕ} (hm : 1 ≤ m) : a m ≡ 1 [ZMOD 6] ∨ a m ≡ 5 [ZMOD 6] := by
   have H : ∀ n : ℕ, 1 ≤ n →
@@ -149,7 +157,14 @@ def c : ℕ → ℤ
   | n + 2 => 4 * c n
 
 example (n : ℕ) : c n = 2 * 2 ^ n + (-2) ^ n := by
-  sorry
+  two_step_induction n with k IH1 IH2
+  · calc c 0 = 3 := by rw [c]
+      _ = 2 * 2 ^ 0 + (-2) ^ 0 := by numbers
+  · calc c 1 = 2 := by rw [c]
+      _ = 2 * 2 ^ 1 + (-2) ^ 1 := by numbers
+  · rw [c]
+    rw [IH1]
+    ring
 
 def t : ℕ → ℤ
   | 0 => 5
@@ -173,7 +188,37 @@ def s : ℕ → ℤ
   | n + 2 => 2 * s (n + 1) + 3 * s n
 
 example (m : ℕ) : s m ≡ 2 [ZMOD 5] ∨ s m ≡ 3 [ZMOD 5] := by
-  sorry
+  have H: ∀ n: ℕ,
+      (s n ≡ 2 [ZMOD 5] ∧ s (n + 1) ≡ 3 [ZMOD 5]) ∨
+      (s n ≡ 3 [ZMOD 5] ∧ s (n + 1) ≡ 2 [ZMOD 5])
+  · intro n
+    simple_induction n with k IH
+    · left
+      constructor
+      rw [s]; numbers
+      rw [s]; numbers
+    · obtain ⟨IH1, IH2⟩ | ⟨IH1, IH2⟩ := IH
+      · right
+        constructor
+        · exact IH2
+        · rw [s]
+          calc s (k + 1 + 1) = 2 * s (k + 1) + 3 * s k := by rw [s]
+            _ ≡ 2 * 3 + 3 * 2 [ZMOD 5] := by rel [IH1, IH2]
+            _ = 2*5+2 := by numbers
+            _ ≡ 2 [ZMOD 5] := by extra
+      · left
+        constructor
+        · exact IH2
+        · rw [s]
+          calc s (k + 1 + 1) = 2 * s (k + 1) + 3 * s k := by rw [s]
+            _ ≡ 2 * 2 + 3 * 3 [ZMOD 5] := by rel [IH1, IH2]
+            _ = 2*5+3 := by numbers
+            _ ≡ 3 [ZMOD 5] := by extra
+  have H:= H m
+  obtain ⟨H1, H2⟩ | ⟨H1, H2⟩ := H
+  · left; apply H1
+  · right; apply H1
+
 
 def p : ℕ → ℤ
   | 0 => 2

@@ -44,9 +44,16 @@ def x : ℕ → ℤ
 example (n : ℕ) : x n ≡ 1 [ZMOD 4] := by
   simple_induction n with k IH
   · -- base case
-    sorry
+    rw [x]
+    use 1; numbers
+
   · -- inductive step
-    sorry
+    rw [x]
+    calc
+      2 * x k - 1 ≡ 2 * 1 - 1 [ZMOD 4] := by rel [IH]
+      _ = 2 - 1 := by numbers
+      _ = 1 := by numbers
+
 
 example (n : ℕ) : x n = 2 ^ (n + 2) + 1 := by
   simple_induction n with k IH
@@ -84,7 +91,7 @@ def factorial : ℕ → ℕ
 notation:10000 n "!" => factorial n
 
 
-example (n : ℕ) : ∀ d, 1 ≤ d → d ≤ n → d ∣ n ! := by
+lemma dvd_factorial (n : ℕ) : ∀ d, 1 ≤ d → d ≤ n → d ∣ n ! := by
   simple_induction n with k IH
   · -- base case
     intro k hk1 hk
@@ -93,12 +100,35 @@ example (n : ℕ) : ∀ d, 1 ≤ d → d ≤ n → d ∣ n ! := by
     intro d hk1 hk
     obtain hk | hk : d = k + 1 ∨ d < k + 1 := eq_or_lt_of_le hk
     · -- case 1: `d = k + 1`
-      sorry
+      use (k !)
+      rw [hk]
+      have: (k + 1)! = (k+1) * k ! := by rw [factorial]
+      exact this
     · -- case 2: `d < k + 1`
-      sorry
+      have: d ≤ k := by addarith [hk]
+      have:= IH d hk1 this
+      obtain ⟨x,hx⟩:= this
+      use (k+1)*x
+      calc
+        (k+1)! = (k + 1) * k ! := by rw [factorial]
+        _ = (k + 1) * (d * x) := by rw [hx]
+        _ = d * ((k + 1) * x) := by ring
 
 example (n : ℕ) : (n + 1)! ≥ 2 ^ n := by
-  sorry
+  simple_induction n with k IH
+  · -- base case
+    rw [factorial]
+    calc
+      (0+1) * 0 ! = 1 * 1 := by rw [factorial]
+      _ = 1 := by numbers
+      _ ≥  2 ^ 0 := by numbers
+  · -- inductive step
+    calc
+      (k+1+1)! = (k + 1 + 1) * (k+1) ! := by rw [factorial]
+      _ ≥ (k + 1 + 1) * 2 ^ k := by rel [IH]
+      _ = 2* 2^k + k*2^k := by ring
+      _ ≥ 2*2^k := by extra
+      _ = 2^(k+1) := by ring
 
 
 /-! # Exercises -/
@@ -109,7 +139,16 @@ def c : ℕ → ℤ
   | n + 1 => 3 * c n - 10
 
 example (n : ℕ) : Odd (c n) := by
-  sorry
+  simple_induction n with k hk
+  · rw [c]
+    use 3
+    numbers
+  · obtain ⟨x, hx⟩ := hk
+    rw [c]
+    rw [hx]
+    use 3 * x - 4
+    calc
+      3 * (2 * x + 1) - 10 = 2 * (3 * x - 4) + 1 := by ring
 
 example (n : ℕ) : c n = 2 * 3 ^ n + 5 := by
   sorry
@@ -136,10 +175,41 @@ example (n : ℕ) : S n = 2 - 1 / 2 ^ n := by
   sorry
 
 example (n : ℕ) : 0 < n ! := by
-  sorry
+  simple_induction n with k IH
+  ·
+    rw [factorial]
+    numbers
+  · rw [factorial]
+    have : 0 < k+1 := by extra
+    have : 1 ≤ k + 1 := by extra
+
+    have g: 1 * k ! ≤ (k + 1) * k ! := by rel [this]
+    calc
+      0 < k ! := by rel [IH]
+      _ = 1 * k ! := by ring
+      _ ≤ (k + 1) * k ! := by rel [g]
+
+
 
 example {n : ℕ} (hn : 2 ≤ n) : Nat.Even (n !) := by
-  sorry
+  induction_from_starting_point n, hn with k hk IH
+  · use 1!
+    rw [factorial]
+
+  · obtain ⟨x, hx⟩ := IH
+    use x * (k+1)
+    rw [factorial, hx]
+    ring
+
 
 example (n : ℕ) : (n + 1) ! ≤ (n + 1) ^ n := by
-  sorry
+  simple_induction n with k IH
+  · rw [factorial, factorial]
+    numbers
+  · rw [factorial]
+    have hkplus: (k+1) ≤ (k+1+1) := by extra
+    have hkexp: (k+1)^k ≤ (k+1+1)^k := by rel [hkplus]
+    calc
+      (k+1+1)*(k+1)! ≤  (k+1+1) * (k + 1) ^ k := by rel [IH]
+      _ ≤ (k+1+1) * (k+1+1) ^ k := by rel [hkexp]
+      _ = (k+1+1) ^ (k + 1) := by ring

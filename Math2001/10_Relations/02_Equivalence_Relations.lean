@@ -165,16 +165,42 @@ end
 
 
 section
-local infix:50 "∼" => fun (a b : ℤ) ↦ ∃ m n, m > 0 ∧ n > 0 ∧ a * m = b * n
+local infix:50 "∼" => fun (a b : ℤ) ↦
+∃ m n, m > 0 ∧ n > 0 ∧ a * m = b * n
 
 example : Reflexive (· ∼ ·) := by
-  sorry
+  dsimp [Reflexive]
+  intro a
+  use 1, 1
+  constructor
+  numbers
+  constructor
+  numbers; ring
 
 example : Symmetric (· ∼ ·) := by
-  sorry
+  dsimp [Symmetric]
+  intro a b h
+  obtain ⟨m, n, hm, hn, hab⟩ := h
+  use n, m
+  constructor; exact hn
+  constructor; exact hm
+  rw [hab]
+
 
 example : Transitive (· ∼ ·) := by
-  sorry
+  dsimp [Transitive]
+  intro a b c hab hbc
+  obtain ⟨m1, n1, hm1, hn1, hab⟩ := hab
+  obtain ⟨m2, n2, hm2, hn2, hbc⟩ := hbc
+  use m1 * m2, n1 * n2
+  constructor; extra
+  constructor; extra
+  conv => ring
+  rw [hab]
+  have: b*n1*m2= b * m2 * n1:=  by ring
+  rw [this, hbc]
+  ring
+
 
 end
 
@@ -183,13 +209,32 @@ section
 local infix:50 "∼" => fun ((a, b) : ℕ × ℕ) (c, d) ↦ a + d = b + c
 
 example : Reflexive (· ∼ ·) := by
-  sorry
+  dsimp [Reflexive]
+  intro (a, b)
+  dsimp
+  ring
+
 
 example : Symmetric (· ∼ ·) := by
-  sorry
+  dsimp [Symmetric]
+  intro (a, b) (c, d) h
+  dsimp at *
+  calc
+    c + b = b + c := by ring
+    _ = a + d := by rw [h]
+    _ = d + a := by ring
+
 
 example : Transitive (· ∼ ·) := by
-  sorry
+  dsimp [Transitive]
+  intro (a, b) (c, d) (e, f) h1 h2
+  dsimp at *
+  have := calc
+    (a + f) + d = a + d + f := by ring
+    _ = b + (c + f) := by rw [h1]; ring
+    _ = b + (d + e) := by rw [h2]
+    _ = (b + e) + d := by ring
+  addarith [this]
 
 end
 
@@ -199,12 +244,40 @@ local infix:50 "∼" => fun ((a, b) : ℤ × ℤ) (c, d) ↦
   ∃ m n, m > 0 ∧ n > 0 ∧ m * b * (b ^ 2 - 3 * a ^ 2) = n * d * (d ^ 2 - 3 * c ^ 2)
 
 example : Reflexive (· ∼ ·) := by
-  sorry
+  dsimp [Reflexive]
+  intro (a,b); dsimp
+  use 1,1
+  constructor; numbers
+  constructor; numbers
+  ring
 
 example : Symmetric (· ∼ ·) := by
-  sorry
+  dsimp [Symmetric]
+  intro (a, b) (c, d) h
+  dsimp at *
+  obtain ⟨m, n, hm, hn, hab⟩ := h
+  use n, m
+  constructor; exact hn
+  constructor; exact hm
+  rw [hab]
 
 example : Transitive (· ∼ ·) := by
-  sorry
+  dsimp [Transitive]
+  intro (a, b) (c, d) (e, f) hab hbc
+  dsimp at *
+  obtain ⟨m1, n1, hm1, hn1, hab⟩ := hab
+  obtain ⟨m2, n2, hm2, hn2, hbc⟩ := hbc
+  use m1 * m2, n1 * n2
+  constructor; extra
+  constructor; extra
+  have : m1 * m2 * b * (b ^ 2 - 3 * a ^ 2) = m2 * (m1 * b * (b ^ 2 - 3 * a ^ 2))  := by
+    ring
+  rw [this]
+  rw [hab]
+  have : m2 * (n1 * d * (d ^ 2 - 3 * c ^ 2)) = n1 * (m2 * d * (d ^ 2 - 3 * c ^ 2)) := by
+    ring
+  rw [this, hbc]
+  ring
+
 
 end
